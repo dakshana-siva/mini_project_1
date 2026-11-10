@@ -1,0 +1,50 @@
+{% extends "_layout.html" %}
+{% set active_page = "settings" %}
+{% block title %}Settings{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Settings</h1>
+    <p class="page-subtitle">Change your password and manage your session.</p>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-7">
+    <section class="panel h-100">
+      <div class="panel-head"><h2 class="panel-title"><i class="bi bi-shield-lock-fill"></i>Change Password</h2></div>
+      {% if error %}<div class="alert alert-warning"><i class="bi bi-exclamation-triangle-fill me-2"></i>{{ error }}</div>{% endif %}
+      <form method="post" action="settings.html">
+        <div class="mb-3">
+          <label for="current_password" class="form-label">Current Password</label>
+          <input type="password" class="form-control" id="current_password" name="current_password" autocomplete="current-password" required>
+        </div>
+        <div class="mb-3">
+          <label for="new_password" class="form-label">New Password</label>
+          <input type="password" class="form-control" id="new_password" name="new_password" minlength="6" autocomplete="new-password" required>
+          <div class="form-text">At least 6 characters.</div>
+        </div>
+        <div class="mb-4">
+          <label for="confirm_password" class="form-label">Confirm New Password</label>
+          <input type="password" class="form-control" id="confirm_password" name="confirm_password" minlength="6" autocomplete="new-password" required>
+        </div>
+        <button type="submit" class="btn btn-primary"><i class="bi bi-key-fill"></i>Update Password</button>
+      </form>
+    </section>
+  </div>
+  <div class="col-lg-5">
+    <section class="panel h-100">
+      <div class="panel-head"><h2 class="panel-title"><i class="bi bi-person-gear"></i>Account</h2></div>
+      <ul class="info-list mb-4">
+        <li><span>Name</span><span>{{ current_user.full_name }}</span></li>
+        <li><span>Email</span><span>{{ current_user.email }}</span></li>
+        <li><span>Stream</span><span>{{ current_user.stream }}</span></li>
+      </ul>
+      <div class="d-flex flex-wrap gap-2">
+        <a href="profile.html" class="btn btn-outline-primary"><i class="bi bi-pencil"></i>Edit Profile</a>
+        <a href="logout" class="btn btn-outline-danger"><i class="bi bi-box-arrow-right"></i>Logout</a>
+      </div>
+    </section>
+  </div>
+</div>
+{% endblock %}

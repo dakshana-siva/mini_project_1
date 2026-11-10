@@ -1,0 +1,39 @@
+{# Shared question form used by practice.html and online-test.html.
+   Needs: questions, kind, subject_key, topic_no (empty for a final test) and batch (practice only). #}
+{% set q_offset = (batch - 1) * 10 if kind == "practice" and batch else 0 %}
+<form method="post" action="results.html">
+  <input type="hidden" name="kind" value="{{ kind }}">
+  <input type="hidden" name="subject" value="{{ subject_key }}">
+  <input type="hidden" name="topic" value="{{ topic_no or '' }}">
+  <input type="hidden" name="batch" value="{{ batch or '' }}">
+  <input type="hidden" name="question_ids" value="{{ questions | map(attribute='id') | join(',') }}">
+
+  {% for q in questions %}
+  <fieldset class="q-card" id="q{{ loop.index }}">
+    <legend>
+      <span class="q-meta">
+        <span class="q-badge">Q{{ q_offset + loop.index }}</span>
+        <span class="pill pill-gray">{{ q.difficulty }}</span>
+        {% if kind == 'final_test' %}<span class="pill">{{ q.topic }}</span>{% endif %}
+      </span>
+      <span class="q-question">{{ q.text }}</span>
+    </legend>
+    <div class="row g-3">
+      {% for option in q.options %}
+      <div class="col-md-6">
+        <label class="option">
+          <input class="option-input" type="radio" name="q{{ q.id }}" value="{{ loop.index0 }}" required>
+          <span class="option-letter">{{ "ABCD"[loop.index0] }}</span>
+          <span>{{ option }}</span>
+        </label>
+      </div>
+      {% endfor %}
+    </div>
+  </fieldset>
+  {% endfor %}
+
+  <div class="panel d-flex flex-wrap align-items-center justify-content-between gap-3">
+    <span class="text-muted"><i class="bi bi-info-circle me-1"></i>Answer all {{ questions|length }} questions, then submit to see your score and explanations.</span>
+    <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-send-fill"></i>Submit Answers</button>
+  </div>
+</form>

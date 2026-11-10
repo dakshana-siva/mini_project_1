@@ -1,0 +1,16 @@
+# Secret key used to sign login sessions (created automatically)
+secret_key.txt
+
+# Local database (contains user accounts and password hashes)
+adaptive_learning.db
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+*.db
+*.sqlite
+*.sqlite3
+.env
+instance/

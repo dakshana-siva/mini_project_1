@@ -1,0 +1,54 @@
+{% extends "_layout.html" %}
+{% set active_page = "profile" %}
+{% block title %}Profile{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">My Profile</h1>
+    <p class="page-subtitle">Update your name and email. Your stream is fixed when you sign up.</p>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-5">
+    <section class="panel h-100 text-center">
+      <span class="avatar avatar-lg mb-3">{{ current_user.initials }}</span>
+      <h2 class="h4 mb-1">{{ current_user.full_name }}</h2>
+      <p class="text-muted mb-3">{{ current_user.email }}</p>
+      <ul class="info-list text-start">
+        <li><span>Stream</span><span>{{ current_user.stream }}</span></li>
+        <li><span>Subjects</span><span>{{ progress | map(attribute='name') | join(', ') }}</span></li>
+        <li><span>Member since</span><span>{{ joined }}</span></li>
+        <li><span>Tests taken</span><span>{{ stats.tests_taken }}</span></li>
+        <li><span>Practice sessions</span><span>{{ stats.practice_sessions }}</span></li>
+        <li><span>Topics completed</span><span>{{ stats.topics_completed }}/{{ stats.total_topics }}</span></li>
+        <li><span>Average test score</span><span>{% if stats.average is not none %}{{ stats.average }}%{% else %}&mdash;{% endif %}</span></li>
+      </ul>
+    </section>
+  </div>
+  <div class="col-lg-7">
+    <section class="panel h-100">
+      <div class="panel-head"><h2 class="panel-title"><i class="bi bi-person-lines-fill"></i>Edit Details</h2></div>
+      {% if error %}<div class="alert alert-warning"><i class="bi bi-exclamation-triangle-fill me-2"></i>{{ error }}</div>{% endif %}
+      <form method="post" action="profile.html">
+        <div class="mb-3">
+          <label for="full_name" class="form-label">Full Name</label>
+          <input type="text" class="form-control" id="full_name" name="full_name" value="{{ request.form.get('full_name', current_user.full_name) }}" required>
+        </div>
+        <div class="mb-3">
+          <label for="email" class="form-label">Email</label>
+          <input type="email" class="form-control" id="email" name="email" value="{{ request.form.get('email', current_user.email) }}" required>
+        </div>
+        <div class="mb-4">
+          <label class="form-label" for="stream">Stream</label>
+          <input type="text" class="form-control" id="stream" value="{{ current_user.stream }}" disabled>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+          <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i>Save Changes</button>
+          <a href="settings.html" class="btn btn-outline-primary"><i class="bi bi-key"></i>Change Password</a>
+        </div>
+      </form>
+    </section>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends "_layout.html" %}
+{% set active_page = "progress" %}
+{% block title %}Progress{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">My Progress</h1>
+    <p class="page-subtitle">Practise all three batches of a topic to unlock its test. A topic is completed once you take its topic test.</p>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-6 col-xl-3"><div class="stat-card"><span class="icon-box"><i class="bi bi-pie-chart-fill"></i></span><div><p class="stat-label">Overall Progress</p><p class="stat-value">{{ stats.overall_percent }}%</p></div></div></div>
+  <div class="col-6 col-xl-3"><div class="stat-card accent-green"><span class="icon-box icon-green"><i class="bi bi-check2-all"></i></span><div><p class="stat-label">Topics Completed</p><p class="stat-value">{{ stats.topics_completed }}/{{ stats.total_topics }}</p></div></div></div>
+  <div class="col-6 col-xl-3"><div class="stat-card accent-navy"><span class="icon-box icon-navy"><i class="bi bi-clipboard-data-fill"></i></span><div><p class="stat-label">Average Test Score</p><p class="stat-value">{% if stats.average is not none %}{{ stats.average }}%{% else %}&mdash;{% endif %}</p></div></div></div>
+  <div class="col-6 col-xl-3"><div class="stat-card accent-amber"><span class="icon-box icon-amber"><i class="bi bi-journal-check"></i></span><div><p class="stat-label">Practice Sessions</p><p class="stat-value">{{ stats.practice_sessions }}</p></div></div></div>
+</div>
+
+<!-- Subject-wise topic status -->
+<div class="row g-4 mb-4">
+  {% for s in progress %}
+  <div class="col-xl-6">
+    <section class="panel h-100">
+      <div class="panel-head">
+        <h2 class="panel-title"><i class="bi {{ s.icon }}"></i>{{ s.name }}</h2>
+        <span class="pill">{{ s.percent }}% &middot; {{ s.completed }}/5 topics</span>
+      </div>
+      <div class="progress mb-3"><div class="progress-bar" style="width: {{ s.percent }}%"></div></div>
+      <ul class="rank-list mb-2">
+        {% for t in s.topics %}
+        <li class="rank-item">
+          <i class="bi {% if t.test_count %}bi-check-circle-fill text-success{% else %}bi-circle text-muted{% endif %}"></i>
+          <span class="flex-grow-1">{{ t.name }}<br><small class="text-muted">Practice: {{ t.batches_done|length }}/3 batches{% if t.practice_complete %} &middot; test unlocked{% endif %}</small></span>
+          {% if t.latest is not none %}<span class="pill pill-{{ level(t.latest) }}">{{ t.latest }}% &middot; {{ t.category }}</span>{% else %}<span class="pill pill-gray">Pending</span>{% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+      <p class="small mb-0">
+        {% if s.final_unlocked %}<i class="bi bi-unlock-fill text-success me-1"></i>Final test: {% if s.final_count %}best {{ s.final_best }}% ({{ s.final_count }} attempt{% if s.final_count != 1 %}s{% endif %}){% else %}unlocked, not taken yet{% endif %}
+        {% else %}<i class="bi bi-lock-fill text-muted me-1"></i><span class="text-muted">Final test locked</span>{% endif %}
+      </p>
+    </section>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Test history -->
+<section class="panel">
+  <div class="panel-head">
+    <h2 class="panel-title"><i class="bi bi-clock-history"></i>Test History</h2>
+    <span class="pill pill-gray">{{ history|length }} attempt{% if history|length != 1 %}s{% endif %}</span>
+  </div>
+  {% if history %}
+  <div class="table-responsive">
+    <table class="table mb-0">
+      <thead><tr><th>Date</th><th>Subject &amp; Topic</th><th>Test</th><th>Score</th><th>Category</th><th></th></tr></thead>
+      <tbody>
+        {% for a in history %}
+        <tr>
+          <td class="text-muted text-nowrap">{{ a.created_at }}</td>
+          <td class="fw-semibold text-navy">{{ describe(a) }}</td>
+          <td>{{ test_name(a) }}</td>
+          <td class="text-nowrap">{{ a.score }}/{{ a.total }} ({{ a.percentage }}%)</td>
+          <td><span class="pill pill-{{ level(a.percentage) }}">{{ category(a.percentage)[0] }}</span></td>
+          <td><a href="results.html?attempt={{ a.id }}" class="link-arrow">View</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-muted mb-0">No attempts yet.</p>
+  {% endif %}
+</section>
+{% endblock %}

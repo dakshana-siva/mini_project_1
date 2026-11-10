@@ -1,0 +1,125 @@
+{% extends "_layout.html" %}
+{% set active_page = "dashboard" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<!-- Welcome banner -->
+<section class="welcome-banner mb-4">
+  <div class="row align-items-center g-4">
+    <div class="col-lg-7">
+      <span class="eyebrow text-white-50">{{ current_user.stream }}</span>
+      <h1 class="h2 fw-bold mb-2">Welcome back, {{ current_user.first_name }}!</h1>
+      <p class="mb-3">Practise each topic, take the topic tests and unlock the final test for every subject.</p>
+      <div class="d-flex flex-wrap gap-2">
+        <a href="practice.html" class="btn btn-white"><i class="bi bi-journal-bookmark-fill"></i>Practice</a>
+        <a href="take-test.html" class="btn btn-light-on-dark"><i class="bi bi-pencil-square"></i>Take a Test</a>
+        <a href="progress.html" class="btn btn-light-on-dark"><i class="bi bi-graph-up"></i>Progress</a>
+      </div>
+    </div>
+    <div class="col-lg-5">
+      <div class="banner-metrics">
+        <div><span>Overall progress</span><strong>{{ stats.overall_percent }}%</strong></div>
+        <div><span>Topics done</span><strong>{{ stats.topics_completed }}/{{ stats.total_topics }}</strong></div>
+        <div><span>Average</span><strong>{% if stats.average is not none %}{{ stats.average }}%{% else %}&mdash;{% endif %}</strong></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Statistics -->
+<div class="row g-4 mb-4">
+  <div class="col-6 col-xl-3">
+    <div class="stat-card"><span class="icon-box"><i class="bi bi-clipboard-check-fill"></i></span>
+      <div><p class="stat-label">Tests Taken</p><p class="stat-value">{{ stats.tests_taken }}</p></div></div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="stat-card accent-navy"><span class="icon-box icon-navy"><i class="bi bi-journal-check"></i></span>
+      <div><p class="stat-label">Practice Sessions</p><p class="stat-value">{{ stats.practice_sessions }}</p></div></div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="stat-card accent-green"><span class="icon-box icon-green"><i class="bi bi-graph-up-arrow"></i></span>
+      <div><p class="stat-label">Best Score</p><p class="stat-value">{% if stats.best is not none %}{{ stats.best }}%{% else %}&mdash;{% endif %}</p></div></div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="stat-card accent-amber"><span class="icon-box icon-amber"><i class="bi bi-bullseye"></i></span>
+      <div><p class="stat-label">Weak Topics</p><p class="stat-value">{{ weak|length }}</p></div></div>
+  </div>
+</div>
+
+<!-- Subjects -->
+<h2 class="section-heading">My Subjects</h2>
+<div class="row g-4 mb-4">
+  {% for s in progress %}
+  <div class="col-md-6 col-xxl-3">
+    <section class="panel panel-hover subject-card h-100 d-flex flex-column">
+      <div class="d-flex align-items-center gap-3 mb-3">
+        <span class="icon-box"><i class="bi {{ s.icon }}"></i></span>
+        <div>
+          <h3 class="topic-title mb-0">{{ s.name }}</h3>
+          <small class="text-muted">{{ s.completed }}/5 topic tests done</small>
+        </div>
+      </div>
+      <div class="progress mb-2"><div class="progress-bar" style="width: {{ s.percent }}%"></div></div>
+      <p class="small text-muted mb-3">
+        {{ s.practised }}/5 topics practised &middot;
+        {% if s.final_unlocked %}<i class="bi bi-unlock-fill text-success"></i> Final test unlocked{% else %}<i class="bi bi-lock-fill"></i> Final test locked{% endif %}
+      </p>
+      <div class="d-flex flex-wrap gap-2 mt-auto">
+        <a href="practice.html?subject={{ s.key }}" class="btn btn-outline-primary flex-fill"><i class="bi bi-journal-bookmark"></i>Practice</a>
+        <a href="take-test.html?subject={{ s.key }}" class="btn btn-primary flex-fill"><i class="bi bi-pencil-square"></i>Tests</a>
+      </div>
+    </section>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="row g-4">
+  <!-- Recent attempts -->
+  <div class="col-xl-8">
+    <section class="panel h-100">
+      <div class="panel-head">
+        <h2 class="panel-title"><i class="bi bi-clock-history"></i>Recent Activity</h2>
+        <a href="results.html" class="link-arrow">All results <i class="bi bi-arrow-right"></i></a>
+      </div>
+      {% if recent %}
+      <div class="table-responsive">
+        <table class="table mb-0">
+          <thead><tr><th>Subject &amp; Topic</th><th>Type</th><th>Score</th><th>Date</th><th></th></tr></thead>
+          <tbody>
+            {% for a in recent %}
+            <tr>
+              <td class="fw-semibold text-navy">{{ describe(a) }}</td>
+              <td>{{ test_name(a) }}</td>
+              <td><span class="pill pill-{{ level(a.percentage) }}">{{ a.score }}/{{ a.total }} &middot; {{ a.percentage }}%</span></td>
+              <td class="text-muted text-nowrap">{{ a.created_at }}</td>
+              <td><a href="results.html?attempt={{ a.id }}" class="link-arrow">View</a></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="text-muted mb-3">You have not attempted anything yet. Start with a practice set.</p>
+      <a href="practice.html" class="btn btn-primary"><i class="bi bi-play-circle-fill"></i>Start Practising</a>
+      {% endif %}
+    </section>
+  </div>
+
+  <!-- Weak topics -->
+  <div class="col-xl-4">
+    <section class="panel h-100">
+      <div class="panel-head">
+        <h2 class="panel-title"><i class="bi bi-lightbulb-fill"></i>Topics to Improve</h2>
+        <a href="recommendations.html" class="link-arrow">All <i class="bi bi-arrow-right"></i></a>
+      </div>
+      {% for w in weak %}
+      <div class="progress-row">
+        <div class="progress-label"><span>{{ w.topic.name }} <small class="text-muted">({{ w.subject.name }})</small></span><span>{{ w.topic.latest }}%</span></div>
+        <div class="progress"><div class="progress-bar bar-{{ level(w.topic.latest) }}" style="width: {{ w.topic.latest }}%"></div></div>
+      </div>
+      {% else %}
+      <p class="text-muted mb-0">Topics with a test score below 70% will appear here.</p>
+      {% endfor %}
+    </section>
+  </div>
+</div>
+{% endblock %}

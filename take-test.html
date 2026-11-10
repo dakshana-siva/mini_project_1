@@ -1,0 +1,79 @@
+{% extends "_layout.html" %}
+{% set active_page = "take-test" %}
+{% block title %}Take Test{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Take a Test</h1>
+    <p class="page-subtitle">A topic test (10 questions) unlocks after you finish all three practice batches of that topic. Finish all five topic tests of a subject to unlock its 15-question final test.</p>
+  </div>
+</div>
+
+<ul class="nav nav-pills subject-tabs mb-4" role="tablist">
+  {% for s in progress %}
+  <li class="nav-item" role="presentation">
+    <button class="nav-link{% if (selected or progress[0].key) == s.key %} active{% endif %}" data-bs-toggle="pill" data-bs-target="#tab-{{ s.key }}" type="button" role="tab"><i class="bi {{ s.icon }} me-1"></i>{{ s.name }}</button>
+  </li>
+  {% endfor %}
+</ul>
+
+<div class="tab-content">
+  {% for s in progress %}
+  <div class="tab-pane fade{% if (selected or progress[0].key) == s.key %} show active{% endif %}" id="tab-{{ s.key }}" role="tabpanel">
+    <section class="panel mb-4">
+      <div class="panel-head">
+        <h2 class="panel-title"><i class="bi {{ s.icon }}"></i>{{ s.name }} &middot; Topic Tests</h2>
+        <span class="pill">{{ s.completed }}/5 completed</span>
+      </div>
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead><tr><th>#</th><th>Topic</th><th>Practice</th><th>Attempts</th><th>Latest</th><th>Best</th><th></th></tr></thead>
+          <tbody>
+            {% for t in s.topics %}
+            <tr>
+              <td>{{ t.number }}</td>
+              <td class="fw-semibold text-navy">{{ t.name }}</td>
+              <td>{% if t.practice_complete %}<span class="pill pill-green"><i class="bi bi-check-circle-fill"></i>3/3 batches</span>{% else %}<span class="pill pill-gray">{{ t.batches_done|length }}/3 batches</span>{% endif %}</td>
+              <td>{{ t.test_count }}</td>
+              <td>{% if t.latest is not none %}<span class="pill pill-{{ level(t.latest) }}">{{ t.latest }}% &middot; {{ t.category }}</span>{% else %}<span class="pill pill-gray">Pending</span>{% endif %}</td>
+              <td>{% if t.best is not none %}{{ t.best }}%{% else %}&mdash;{% endif %}</td>
+              <td class="text-end text-nowrap">
+                {% if t.test_unlocked %}
+                <a href="online-test.html?kind=topic_test&amp;subject={{ s.key }}&amp;topic={{ t.number }}" class="btn btn-primary btn-sm">{% if t.test_count %}Retake{% else %}Start Test{% endif %}</a>
+                {% else %}
+                <a href="practice.html?subject={{ s.key }}&amp;topic={{ t.number }}" class="btn btn-outline-primary btn-sm" title="Finish the three practice batches to unlock this test"><i class="bi bi-lock-fill"></i>Practise First</a>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel final-card{% if not s.final_unlocked %} is-locked{% endif %}">
+      <div class="d-flex flex-wrap align-items-center gap-3">
+        <span class="icon-box {% if s.final_unlocked %}icon-solid{% else %}icon-navy{% endif %}"><i class="bi {% if s.final_unlocked %}bi-trophy-fill{% else %}bi-lock-fill{% endif %}"></i></span>
+        <div class="flex-grow-1">
+          <h2 class="h5 mb-1">{{ s.name }} Final Test</h2>
+          <p class="text-muted mb-0">
+            15 questions (3 from each topic).
+            {% if s.final_unlocked %}
+              {% if s.final_count %}Latest score: <strong>{{ s.final_latest }}%</strong> &middot; Best: <strong>{{ s.final_best }}%</strong>{% else %}Unlocked &ndash; ready when you are!{% endif %}
+            {% else %}
+              Complete {{ 5 - s.completed }} more topic test{% if 5 - s.completed != 1 %}s{% endif %} to unlock.
+            {% endif %}
+          </p>
+        </div>
+        {% if s.final_unlocked %}
+        <a href="online-test.html?kind=final_test&amp;subject={{ s.key }}" class="btn btn-primary"><i class="bi bi-play-fill"></i>{% if s.final_count %}Retake Final Test{% else %}Start Final Test{% endif %}</a>
+        {% else %}
+        <button class="btn btn-outline-primary" disabled><i class="bi bi-lock-fill"></i>Locked</button>
+        {% endif %}
+      </div>
+    </section>
+  </div>
+  {% endfor %}
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %}

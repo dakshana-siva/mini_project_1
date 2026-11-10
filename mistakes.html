@@ -1,0 +1,56 @@
+{% extends "_layout.html" %}
+{% set active_page = "mistakes" %}
+{% block title %}Review Mistakes{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Review Mistakes</h1>
+    <p class="page-subtitle">See the correct answer and explanation for every question you got wrong.</p>
+  </div>
+  {% if attempts %}
+  <form method="get" action="mistakes.html" class="d-flex flex-wrap gap-2 align-items-center attempt-picker">
+    <label for="attempt" class="visually-hidden">Choose an attempt</label>
+    <select id="attempt" name="attempt" class="form-select form-select-sm">
+      {% for a in attempts %}
+      <option value="{{ a.id }}"{% if a.id == attempt.id %} selected{% endif %}>{{ a.created_at }} &middot; {{ test_name(a) }} &middot; {{ describe(a) }} ({{ a.percentage }}%)</option>
+      {% endfor %}
+    </select>
+    <button class="btn btn-primary btn-sm" type="submit">Show</button>
+  </form>
+  {% endif %}
+</div>
+
+{% if not attempt %}
+<div class="panel empty-state">
+  <span class="icon-box"><i class="bi bi-x-octagon"></i></span>
+  <p>No attempts yet. Your mistakes will be listed here after your first practice or test.</p>
+  <a href="practice.html" class="btn btn-primary">Start Practising</a>
+</div>
+{% elif not wrong %}
+<div class="panel empty-state">
+  <span class="icon-box icon-green"><i class="bi bi-patch-check-fill"></i></span>
+  <h2 class="h5">No mistakes in this attempt!</h2>
+  <p>{{ describe(attempt) }} &middot; {{ attempt.score }}/{{ attempt.total }}</p>
+</div>
+{% else %}
+<p class="section-note"><strong class="text-navy">{{ describe(attempt) }}</strong> &middot; {{ test_name(attempt) }} &middot; {{ wrong|length }} mistake{% if wrong|length != 1 %}s{% endif %}</p>
+{% for q in wrong %}
+<div class="q-card review-card is-wrong">
+  <div class="q-meta">
+    <span class="pill pill-gray">{{ q.difficulty }}</span>
+    <span class="pill">{{ q.topic }}</span>
+  </div>
+  <p class="q-text">{{ q.text }}</p>
+  <div class="row g-3 mb-2">
+    <div class="col-md-6">
+      <div class="answer-box answer-wrong"><i class="bi bi-x-circle-fill"></i><span><small>Your answer</small><strong>{% if q.selected is not none %}{{ q.options[q.selected] }}{% else %}Not answered{% endif %}</strong></span></div>
+    </div>
+    <div class="col-md-6">
+      <div class="answer-box answer-right"><i class="bi bi-check-circle-fill"></i><span><small>Correct answer</small><strong>{{ q.options[q.correct] }}</strong></span></div>
+    </div>
+  </div>
+  <div class="explain-box"><i class="bi bi-lightbulb-fill"></i><span>{{ q.explanation }}</span></div>
+</div>
+{% endfor %}
+{% endif %}
+{% endblock %}

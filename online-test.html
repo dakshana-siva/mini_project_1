@@ -1,0 +1,14 @@
+{% extends "_layout.html" %}
+{% set active_page = "take-test" %}
+{% block title %}Online Test{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <span class="eyebrow">{{ KIND_NAMES[kind] }} &middot; {{ SUBJECTS[subject_key].name }}</span>
+    <h1 class="page-title">{% if topic %}{{ topic }}{% else %}{{ SUBJECTS[subject_key].name }} Final Test{% endif %}</h1>
+    <p class="page-subtitle">{{ questions|length }} questions with a mix of Easy, Medium and Hard. Each correct answer earns 1 mark.</p>
+  </div>
+  <a href="take-test.html?subject={{ subject_key }}" class="btn btn-outline-primary"><i class="bi bi-x-lg"></i>Cancel</a>
+</div>
+{% include "_questions.html" %}
+{% endblock %}

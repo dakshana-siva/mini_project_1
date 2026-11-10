@@ -1,0 +1,96 @@
+{% extends "_layout.html" %}
+{% set active_page = "practice" %}
+{% block title %}Practice{% endblock %}
+{% block content %}
+{% if questions %}
+{# ---------- A practice batch: 10 questions of one topic ---------- #}
+<div class="page-header">
+  <div>
+    <span class="eyebrow">Practice &middot; {{ SUBJECTS[subject_key].name }}</span>
+    <h1 class="page-title">{{ topic }}</h1>
+    <p class="page-subtitle">Batch {{ batch }} of 3 &middot; {{ questions|length }} {{ BATCHES[batch] }} questions. Your answers are saved when you submit.</p>
+  </div>
+  <a href="practice.html?subject={{ subject_key }}" class="btn btn-outline-primary"><i class="bi bi-arrow-left"></i>Back to Topics</a>
+</div>
+
+<!-- Batch progress for this topic -->
+<div class="batch-steps mb-4">
+  {% for b, level_name in BATCHES.items() %}
+  {% set done = b in info.batches_done %}
+  <div class="batch-step{% if b == batch %} is-current{% elif done %} is-done{% endif %}">
+    <span class="batch-step-num">{% if done and b != batch %}<i class="bi bi-check-lg"></i>{% else %}{{ b }}{% endif %}</span>
+    <div>
+      <strong>Batch {{ b }}</strong>
+      <small>Questions {{ (b - 1) * 10 + 1 }}&ndash;{{ b * 10 }} &middot; {{ level_name }}</small>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% with kind = "practice" %}{% include "_questions.html" %}{% endwith %}
+
+{% else %}
+{# ---------- Topic list ---------- #}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Practice</h1>
+    <p class="page-subtitle">Every topic has 30 practice questions in three batches: Batch 1 (Easy), Batch 2 (Medium) and Batch 3 (Hard). Finish all three to unlock the topic test.</p>
+  </div>
+</div>
+
+<ul class="nav nav-pills subject-tabs mb-4" role="tablist">
+  {% for s in progress %}
+  <li class="nav-item" role="presentation">
+    <button class="nav-link{% if (selected or progress[0].key) == s.key %} active{% endif %}" data-bs-toggle="pill" data-bs-target="#tab-{{ s.key }}" type="button" role="tab"><i class="bi {{ s.icon }} me-1"></i>{{ s.name }}</button>
+  </li>
+  {% endfor %}
+</ul>
+
+<div class="tab-content">
+  {% for s in progress %}
+  <div class="tab-pane fade{% if (selected or progress[0].key) == s.key %} show active{% endif %}" id="tab-{{ s.key }}" role="tabpanel">
+    <div class="row g-4">
+      {% for t in s.topics %}
+      <div class="col-md-6 col-xxl-4">
+        <div class="panel topic-card h-100{% if t.practice_complete %} is-complete{% endif %}">
+          <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
+            <span class="rank-num">{{ t.number }}</span>
+            {% if t.practice_complete %}<span class="pill pill-green"><i class="bi bi-check-circle-fill"></i>All batches done</span>
+            {% elif t.batches_done %}<span class="pill"><i class="bi bi-hourglass-split"></i>{{ t.batches_done|length }}/3 batches</span>
+            {% else %}<span class="pill pill-gray">Not started</span>{% endif %}
+          </div>
+          <h3 class="topic-title">{{ t.name }}</h3>
+          <p class="text-muted mb-3">30 questions &middot; 10 Easy, 10 Medium, 10 Hard</p>
+
+          <div class="batch-list mb-3">
+            {% for b, level_name in BATCHES.items() %}
+            {% set done = b in t.batches_done %}
+            {% set open = b == 1 or (b - 1) in t.batches_done %}
+            {% if open %}
+            <a class="batch-chip{% if done %} is-done{% elif b == t.next_batch %} is-next{% endif %}" href="practice.html?subject={{ s.key }}&amp;topic={{ t.number }}&amp;batch={{ b }}">
+            {% else %}
+            <span class="batch-chip is-locked" title="Finish Batch {{ b - 1 }} first">
+            {% endif %}
+              <span class="batch-chip-label"><i class="bi {% if done %}bi-check-circle-fill{% elif open %}bi-play-circle{% else %}bi-lock-fill{% endif %}"></i>Batch {{ b }} <small>{{ level_name }}</small></span>
+              <span class="batch-chip-score">{% if b in t.batch_scores %}{{ t.batch_scores[b] }}%{% elif open %}Start{% else %}Locked{% endif %}</span>
+            {% if open %}</a>{% else %}</span>{% endif %}
+            {% endfor %}
+          </div>
+
+          <div class="d-flex flex-wrap gap-2 mt-auto">
+            <a href="practice.html?subject={{ s.key }}&amp;topic={{ t.number }}" class="btn btn-primary flex-fill"><i class="bi bi-play-fill"></i>{% if t.practice_complete %}Practise Again{% elif t.batches_done %}Continue &middot; Batch {{ t.next_batch }}{% else %}Start Batch 1{% endif %}</a>
+            {% if t.test_unlocked %}
+            <a href="online-test.html?kind=topic_test&amp;subject={{ s.key }}&amp;topic={{ t.number }}" class="btn btn-outline-primary flex-fill"><i class="bi bi-pencil-square"></i>Topic Test</a>
+            {% else %}
+            <button class="btn btn-outline-primary flex-fill" disabled title="Complete all three batches first"><i class="bi bi-lock-fill"></i>Topic Test</button>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+{% endif %}
+{% endblock %}

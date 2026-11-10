@@ -1,0 +1,78 @@
+{% extends "_layout.html" %}
+{% set active_page = "recommendations" %}
+{% block title %}Recommendations{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Recommendations</h1>
+    <p class="page-subtitle">Based on your latest topic test scores: below 40% = Need Practice, 40&ndash;69% = Average, 70% and above = Good.</p>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-xl-7">
+    <!-- Weak topics -->
+    <section class="panel mb-4">
+      <div class="panel-head">
+        <h2 class="panel-title"><i class="bi bi-bullseye"></i>Weak Topics</h2>
+        <span class="pill pill-red">{{ recs|length }}</span>
+      </div>
+      {% for r in recs %}
+      <div class="rec-card{% if loop.first %} is-top{% endif %}">
+        <div class="d-flex flex-wrap align-items-start gap-3">
+          <span class="priority-num">{{ loop.index }}</span>
+          <div class="flex-grow-1">
+            <h3 class="h6 mb-1">{{ r.topic.name }} <small class="text-muted fw-normal">&middot; {{ r.subject.name }}</small></h3>
+            <p class="mb-2"><span class="pill pill-{{ level(r.topic.latest) }}">{{ r.topic.latest }}% &middot; {{ r.topic.category }}</span></p>
+            <p class="text-muted mb-3">{{ r.advice }}</p>
+            <div class="d-flex flex-wrap gap-2">
+              <a href="practice.html?subject={{ r.subject.key }}&amp;topic={{ r.topic.number }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-journal-bookmark"></i>Practise</a>
+              <a href="online-test.html?kind=topic_test&amp;subject={{ r.subject.key }}&amp;topic={{ r.topic.number }}" class="btn btn-primary btn-sm"><i class="bi bi-arrow-repeat"></i>Retake Test</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% else %}
+      <p class="mb-0"><i class="bi bi-patch-check-fill text-success me-2"></i>No weak topics right now. Every topic test you have taken is 70% or above.</p>
+      {% endfor %}
+    </section>
+
+    <!-- Final tests -->
+    {% if finals %}
+    <section class="panel">
+      <div class="panel-head"><h2 class="panel-title"><i class="bi bi-trophy-fill"></i>Final Tests Unlocked</h2></div>
+      {% for s in finals %}
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 py-2{% if not loop.last %} border-bottom{% endif %}">
+        <span class="fw-semibold text-navy">{{ s.name }}{% if s.final_count %} <small class="text-muted fw-normal">&middot; best {{ s.final_best }}%</small>{% endif %}</span>
+        <a href="online-test.html?kind=final_test&amp;subject={{ s.key }}" class="btn btn-primary btn-sm">{% if s.final_count %}Retake{% else %}Take Final Test{% endif %}</a>
+      </div>
+      {% endfor %}
+    </section>
+    {% endif %}
+  </div>
+
+  <!-- Pending topics -->
+  <div class="col-xl-5">
+    <section class="panel">
+      <div class="panel-head">
+        <h2 class="panel-title"><i class="bi bi-hourglass-split"></i>Pending Topics</h2>
+        <span class="pill pill-gray">{{ pending|length }}</span>
+      </div>
+      {% if pending %}
+      <p class="text-muted">Topics without a topic test yet. Finish the three practice batches, then take the test.</p>
+      <ul class="rank-list">
+        {% for s, t in pending[:10] %}
+        <li class="rank-item">
+          <span class="flex-grow-1"><span class="fw-semibold">{{ t.name }}</span><br><small class="text-muted">{{ s.name }} &middot; {{ t.batches_done|length }}/3 batches</small></span>
+          <a href="{% if t.test_unlocked %}online-test.html?kind=topic_test&amp;subject={{ s.key }}&amp;topic={{ t.number }}{% else %}practice.html?subject={{ s.key }}&amp;topic={{ t.number }}{% endif %}" class="btn btn-outline-primary btn-sm">{% if t.test_unlocked %}Test{% else %}Practise{% endif %}</a>
+        </li>
+        {% endfor %}
+      </ul>
+      {% if pending|length > 10 %}<p class="small text-muted mb-0">and {{ pending|length - 10 }} more &ndash; see <a href="progress.html">Progress</a>.</p>{% endif %}
+      {% else %}
+      <p class="mb-0"><i class="bi bi-check-circle-fill text-success me-2"></i>You have taken every topic test.</p>
+      {% endif %}
+    </section>
+  </div>
+</div>
+{% endblock %}

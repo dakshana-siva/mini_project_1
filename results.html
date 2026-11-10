@@ -1,0 +1,157 @@
+{% extends "_layout.html" %}
+{% set active_page = "results" %}
+{% block title %}Results{% endblock %}
+{% block content %}
+{% if not attempt %}
+{# ======================= Results Portal: complete history ======================= #}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Results Portal</h1>
+    <p class="page-subtitle">Every practice batch, topic test and final test you have submitted, newest first. Open any result to see your answers and explanations.</p>
+  </div>
+  <a href="take-test.html" class="btn btn-primary"><i class="bi bi-pencil-square"></i>Take a Test</a>
+</div>
+
+{% if all_count == 0 %}
+<div class="panel empty-state">
+  <span class="icon-box"><i class="bi bi-clipboard-check"></i></span>
+  <h2 class="h4">No results yet</h2>
+  <p>Your results will appear here after you submit your first practice batch or test. Every attempt is saved, so you can come back and review it at any time.</p>
+  <div class="d-flex flex-wrap justify-content-center gap-2">
+    <a href="practice.html" class="btn btn-primary"><i class="bi bi-play-fill"></i>Start Practising</a>
+    <a href="take-test.html" class="btn btn-outline-primary"><i class="bi bi-pencil-square"></i>View Tests</a>
+  </div>
+</div>
+{% else %}
+<!-- Filter by test type -->
+<div class="filter-bar mb-4">
+  <a class="filter-chip{% if not kind %} active{% endif %}" href="results.html">All results <span>{{ all_count }}</span></a>
+  {% for key, name in KIND_NAMES.items() %}
+  <a class="filter-chip{% if kind == key %} active{% endif %}" href="results.html?type={{ key }}">{{ name }}{% if key != 'practice' %}s{% endif %} <span>{{ counts[key] }}</span></a>
+  {% endfor %}
+</div>
+
+{% if history %}
+<div class="result-list">
+  {% for a in history %}
+  {% set cat = category(a.percentage) %}
+  <a class="result-item" href="results.html?attempt={{ a.id }}">
+    <span class="result-no">#{{ total - start - loop.index0 }}</span>
+    <div class="result-main">
+      <span class="result-type type-{{ a.kind }}">{{ test_name(a) }}</span>
+      <h2 class="result-title">{{ a.topic or "Final Subject Test" }}</h2>
+      <p class="result-meta">
+        <span><i class="bi {{ SUBJECTS[a.subject].icon }}"></i>{{ SUBJECTS[a.subject].name }}</span>
+        <span><i class="bi bi-calendar3"></i>{{ a.created_at }}</span>
+      </p>
+    </div>
+    <div class="result-score">
+      <strong>{{ a.score }}<small>/{{ a.total }}</small></strong>
+      <span>marks</span>
+    </div>
+    <div class="result-percent">
+      <div class="score-ring ring-xs ring-{{ cat[1] }}" style="--p: {{ a.percentage }};">
+        <div class="score-ring-inner"><span class="score-ring-value">{{ a.percentage }}%</span></div>
+      </div>
+      <span class="pill pill-{{ cat[1] }}">{{ cat[0] }}</span>
+    </div>
+    <span class="result-open">View details <i class="bi bi-chevron-right"></i></span>
+  </a>
+  {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if pages > 1 %}
+{% set type_q = "&type=" ~ kind if kind else "" %}
+<nav class="d-flex flex-wrap align-items-center justify-content-between gap-3 mt-4" aria-label="Result pages">
+  <span class="text-muted">Showing {{ start + 1 }}&ndash;{{ start + history|length }} of {{ total }} results</span>
+  <ul class="pagination mb-0">
+    <li class="page-item{% if page == 1 %} disabled{% endif %}"><a class="page-link" href="results.html?page={{ page - 1 }}{{ type_q }}" aria-label="Previous"><i class="bi bi-chevron-left"></i></a></li>
+    {% for p in range(1, pages + 1) %}
+    <li class="page-item{% if p == page %} active{% endif %}"><a class="page-link" href="results.html?page={{ p }}{{ type_q }}">{{ p }}</a></li>
+    {% endfor %}
+    <li class="page-item{% if page == pages %} disabled{% endif %}"><a class="page-link" href="results.html?page={{ page + 1 }}{{ type_q }}" aria-label="Next"><i class="bi bi-chevron-right"></i></a></li>
+  </ul>
+</nav>
+{% else %}
+<p class="text-muted mt-3 mb-0">Showing all {{ total }} result{% if total != 1 %}s{% endif %}.</p>
+{% endif %}
+{% else %}
+<div class="panel empty-state">
+  <span class="icon-box"><i class="bi bi-funnel"></i></span>
+  <h2 class="h4">No {{ KIND_NAMES[kind] }} results yet</h2>
+  <p>Try another filter or take a {{ KIND_NAMES[kind]|lower }}.</p>
+  <a href="results.html" class="btn btn-outline-primary">Show all results</a>
+</div>
+{% endif %}
+{% endif %}
+
+{% else %}
+{# ======================= One result with every answer ======================= #}
+{% set cat = category(attempt.percentage) %}
+<div class="mb-3"><a href="results.html" class="link-arrow"><i class="bi bi-arrow-left"></i> All results</a></div>
+<section class="panel result-hero-panel mb-4">
+  <div class="result-hero">
+    <div class="score-ring ring-{{ cat[1] }}" style="--p: {{ attempt.percentage }};">
+      <div class="score-ring-inner">
+        <span class="score-ring-value">{{ attempt.percentage }}%</span>
+        <span class="score-ring-label">{{ attempt.score }} / {{ attempt.total }}</span>
+      </div>
+    </div>
+    <div class="flex-grow-1">
+      <span class="eyebrow">{{ test_name(attempt) }} &middot; {{ attempt.created_at }}</span>
+      <h1 class="h2 mb-2">{{ describe(attempt) }}</h1>
+      <p class="mb-3 fs-5">Result: <span class="pill pill-{{ cat[1] }}">{{ cat[0] }}</span>
+        &nbsp;{{ attempt.score }} correct, {{ attempt.total - attempt.score }} wrong.</p>
+      <div class="d-flex flex-wrap gap-2">
+        {% if attempt.kind == 'practice' and topic_info %}
+          {% if topic_info.practice_complete %}
+          <a href="online-test.html?kind=topic_test&amp;subject={{ attempt.subject }}&amp;topic={{ topic_no }}" class="btn btn-primary"><i class="bi bi-pencil-square"></i>Take Topic Test</a>
+          {% else %}
+          <a href="practice.html?subject={{ attempt.subject }}&amp;topic={{ topic_no }}" class="btn btn-primary"><i class="bi bi-play-fill"></i>Continue &middot; Batch {{ topic_info.next_batch }}</a>
+          {% endif %}
+          {% if attempt.batch %}
+          <a href="practice.html?subject={{ attempt.subject }}&amp;topic={{ topic_no }}&amp;batch={{ attempt.batch }}" class="btn btn-outline-primary"><i class="bi bi-arrow-repeat"></i>Practise Batch {{ attempt.batch }} Again</a>
+          {% endif %}
+        {% elif attempt.kind == 'topic_test' and topic_info %}
+        <a href="online-test.html?kind=topic_test&amp;subject={{ attempt.subject }}&amp;topic={{ topic_no }}" class="btn btn-primary"><i class="bi bi-arrow-repeat"></i>Retake Test</a>
+        <a href="take-test.html?subject={{ attempt.subject }}" class="btn btn-outline-primary"><i class="bi bi-list-check"></i>All Topic Tests</a>
+        {% elif attempt.kind == 'final_test' and attempt.subject in current_subjects %}
+        <a href="online-test.html?kind=final_test&amp;subject={{ attempt.subject }}" class="btn btn-primary"><i class="bi bi-arrow-repeat"></i>Retake Final Test</a>
+        {% endif %}
+        {% if attempt.score < attempt.total %}
+        <a href="mistakes.html?attempt={{ attempt.id }}" class="btn btn-outline-primary"><i class="bi bi-x-octagon"></i>Review Mistakes</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Answer review -->
+<h2 class="section-heading">Answers and Explanations</h2>
+{% set q_offset = (attempt.batch - 1) * 10 if attempt.kind == 'practice' and attempt.batch else 0 %}
+{% for q in items %}
+<div class="q-card review-card {% if q.is_correct %}is-right{% else %}is-wrong{% endif %}">
+  <div class="q-meta">
+    <span class="q-badge">Q{{ q_offset + loop.index }}</span>
+    <span class="pill pill-gray">{{ q.difficulty }}</span>
+    {% if attempt.kind == 'final_test' %}<span class="pill">{{ q.topic }}</span>{% endif %}
+    {% if q.is_correct %}<span class="pill pill-green"><i class="bi bi-check-lg"></i>Correct</span>{% else %}<span class="pill pill-red"><i class="bi bi-x-lg"></i>Wrong</span>{% endif %}
+  </div>
+  <p class="q-text">{{ q.text }}</p>
+  <div class="row g-3 mb-2">
+    {% for option in q.options %}
+    <div class="col-md-6">
+      <div class="review-option{% if loop.index0 == q.correct %} is-correct{% elif loop.index0 == q.selected %} is-chosen{% endif %}">
+        <span class="option-letter">{{ "ABCD"[loop.index0] }}</span><span>{{ option }}</span>
+        {% if loop.index0 == q.correct %}<i class="bi bi-check-circle-fill ms-auto"></i>{% elif loop.index0 == q.selected %}<i class="bi bi-x-circle-fill ms-auto"></i>{% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% if q.selected is none %}<p class="text-danger mb-2">Not answered.</p>{% endif %}
+  <div class="explain-box"><i class="bi bi-lightbulb-fill"></i><span>{{ q.explanation }}</span></div>
+</div>
+{% endfor %}
+{% endif %}
+{% endblock %}
